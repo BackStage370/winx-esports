@@ -99,8 +99,6 @@
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-    // Configure somente com a URL do projeto e a chave PUBLICA anon/publishable.
-    // Nunca coloque a chave service_role ou o Client Secret do Discord neste arquivo.
     const SUPABASE_URL = 'https://tyvrzpmfahlizellgpwk.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_VCIcHEQAjOdhBgyEyiRPgw_I_F4nhs1';
 
@@ -110,64 +108,96 @@
     const loginButton = document.getElementById('discord-login');
     const logoutButton = document.getElementById('logout');
 
-    const configured =
-      SUPABASE_URL.startsWith('https://') &&
-      !SUPABASE_URL.includes('COLE_') &&
-      SUPABASE_ANON_KEY.length > 20 &&
-      !SUPABASE_ANON_KEY.includes('COLE_');
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        flowType: 'pkce',
+        detectSessionInUrl: true,
+        persistSession: true,
+        autoRefreshToken: true
+      }
+    });
 
-    if (!configured) {
-      statusEl.textContent = 'Login aguardando configuração do Supabase.';
-      messageEl.textContent = 'A conexão será ativada assim que adicionarmos a URL e a chave pública do projeto.';
+    function showSession(session) {
+      if (session?.user) {
+        statusEl.textContent = 'Você está conectado à WINX!';
+        userEl.textContent =
+          session.user.user_metadata?.full_name ||
+          session.user.user_metadata?.name ||
+          session.user.email ||
+          'Conta Discord conectada';
+        userEl.hidden = false;
+        loginButton.hidden = true;
+        logoutButton.hidden = false;
+      } else {
+        statusEl.textContent = 'Você ainda não está conectado.';
+        userEl.hidden = true;
+        loginButton.hidden = false;
+        logoutButton.hidden = true;
+      }
+    }
+
+    // Registra o listener antes de consultar a sessão para não perder
+    // o evento de retorno do OAuth.
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        messageEl.textContent = '';
+      }
+      showSession(session);
+    });
+
+    loginButton.addEventListener('click', async () => {
+      messageEl.textContent = 'Abrindo o Discord para autenticação...';
       loginButton.disabled = true;
-      loginButton.title = 'Configure primeiro as credenciais públicas do Supabase.';
-    } else {
-      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'discord',
+        options: {
+          redirectTo: window.location.origin,
+          scopes: 'identify email'
+        }
+      });
+      if (error) {
+        messageEl.textContent = 'Erro ao iniciar login: ' + error.message;
+        loginButton.disabled = false;
+      }
+    });
 
-      function showSession(session) {
-        if (session?.user) {
-          statusEl.textContent = 'Você está conectado à WINX!';
-          userEl.textContent = session.user.user_metadata?.full_name ||
-            session.user.user_metadata?.name ||
-            session.user.email ||
-            'Conta Discord conectada';
-          userEl.hidden = false;
-          loginButton.hidden = true;
-          logoutButton.hidden = false;
-        } else {
-          statusEl.textContent = 'Você ainda não está conectado.';
-          userEl.hidden = true;
-          loginButton.hidden = false;
-          logoutButton.hidden = true;
+    logoutButton.addEventListener('click', async () => {
+      messageEl.textContent = 'Saindo da conta...';
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        messageEl.textContent = 'Erro ao sair: ' + error.message;
+        return;
+      }
+      messageEl.textContent = 'Você saiu da sua conta.';
+      showSession(null);
+    });
+
+    async function loadSession() {
+      statusEl.textContent = 'Verificando sua sessão...';
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        statusEl.textContent = 'Não foi possível verificar a sessão.';
+        messageEl.textContent = 'Erro do Supabase: ' + error.message;
+        return;
+      }
+      showSession(data.session);
+      if (!data.session) {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('error') || params.has('error_description')) {
+          messageEl.textContent =
+            params.get('error_description') ||
+            params.get('error') ||
+            'O provedor não concluiu a autenticação.';
         }
       }
-
-      loginButton.addEventListener('click', async () => {
-        messageEl.textContent = 'Abrindo o Discord para autenticação...';
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'discord',
-          options: { redirectTo: window.location.origin }
-        });
-        if (error) messageEl.textContent = 'Não foi possível iniciar o login: ' + error.message;
-      });
-
-      logoutButton.addEventListener('click', async () => {
-        const { error } = await supabase.auth.signOut();
-        if (error) {
-          messageEl.textContent = 'Erro ao sair: ' + error.message;
-          return;
-        }
-        messageEl.textContent = 'Você saiu da sua conta.';
-        showSession(null);
-      });
-
-      supabase.auth.getSession().then(({ data, error }) => {
-        if (error) messageEl.textContent = 'Não foi possível verificar a sessão: ' + error.message;
-        showSession(data?.session);
-      });
-
-      supabase.auth.onAuthStateChange((_event, session) => showSession(session));
+      loginButton.disabled = false;
     }
+
+    loadSession().catch((error) => {
+      statusEl.textContent = 'Falha ao carregar a sessão.';
+      messageEl.textContent = 'Erro inesperado: ' + (error?.message || String(error));
+      loginButton.disabled = false;
+    });
   </script>
 </body>
 </html>
