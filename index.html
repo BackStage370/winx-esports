@@ -30,6 +30,15 @@
     #account-status { color: #d4b4ff; font-weight: bold; }
     #account-message { min-height: 24px; color: #ffcf8a; font-size: 14px; }
     .user-email { overflow-wrap: anywhere; color: #d4b4ff !important; }
+    .member-profile { margin: 24px auto 0; padding: 22px; max-width: 480px; border: 1px solid #392653; border-radius: 14px; background: #100c19; text-align: left; }
+    .profile-top { display: flex; align-items: center; gap: 16px; }
+    .profile-avatar { width: 76px; height: 76px; border-radius: 50%; object-fit: cover; border: 2px solid #b88aff; background: #241833; }
+    .profile-name { margin: 0 0 6px; color: #fff; font-size: 20px; }
+    .profile-handle { margin: 0; color: #bda9d2; overflow-wrap: anywhere; }
+    .rank-line { margin-top: 18px; padding: 12px 14px; border-radius: 9px; background: #21172f; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .rank-label { color: #bda9d2; font-size: 14px; }
+    .rank-value { color: #d4b4ff; font-weight: 800; }
+    .profile-note { font-size: 13px; color: #a99bb8 !important; margin-bottom: 0; }
     footer { padding: 25px; text-align: center; color: #91869e; border-top: 1px solid #392653; }
     @media (max-width: 700px) {
       header { flex-direction: column; }
@@ -87,6 +96,11 @@
       <div class="account-panel">
         <p id="account-status">Verificando configuração...</p>
         <p id="account-user" class="user-email" hidden></p>
+        <div id="member-profile" class="member-profile" hidden>
+          <div class="profile-top"><img id="profile-avatar" class="profile-avatar" alt="Avatar do jogador"><div><h3 id="profile-name" class="profile-name"></h3><p id="profile-handle" class="profile-handle"></p></div></div>
+          <div class="rank-line"><span class="rank-label">Patente WINX</span><span id="profile-rank" class="rank-value">Carregando...</span></div>
+          <p id="profile-note" class="profile-note"></p>
+        </div>
         <button id="discord-login" class="button" type="button">🎮 ENTRAR COM DISCORD</button>
         <button id="logout" class="button outline" type="button" hidden>Sair da conta</button>
         <p id="account-message" role="status" aria-live="polite"></p>
@@ -107,97 +121,95 @@
     const messageEl = document.getElementById('account-message');
     const loginButton = document.getElementById('discord-login');
     const logoutButton = document.getElementById('logout');
+    const profileEl = document.getElementById('member-profile');
+    const avatarEl = document.getElementById('profile-avatar');
+    const nameEl = document.getElementById('profile-name');
+    const handleEl = document.getElementById('profile-handle');
+    const rankEl = document.getElementById('profile-rank');
+    const noteEl = document.getElementById('profile-note');
+
+    const roleNames = { administrator: '👑 Administrador', leader: '⚔️ Líder', member: '🛡️ Membro', recruit: '🎯 Recruta' };
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: {
-        flowType: 'pkce',
-        detectSessionInUrl: true,
-        persistSession: true,
-        autoRefreshToken: true
-      }
+      auth: { flowType: "pkce", detectSessionInUrl: true, persistSession: true, autoRefreshToken: true }
     });
 
-    function showSession(session) {
-      if (session?.user) {
-        statusEl.textContent = 'Você está conectado à WINX!';
-        userEl.textContent =
-          session.user.user_metadata?.full_name ||
-          session.user.user_metadata?.name ||
-          session.user.email ||
-          'Conta Discord conectada';
-        userEl.hidden = false;
-        loginButton.hidden = true;
-        logoutButton.hidden = false;
+    function getDiscordProfile(user) {
+      const metadata = user.user_metadata || {};
+      return { username: metadata.username || metadata.preferred_username || metadata.name || 'jogador', display_name: metadata.global_name || metadata.full_name || metadata.name || metadata.username || 'Jogador WINX', avatar_url: metadata.avatar_url || metadata.picture || '' };
+    }
+
+    async function loadMemberProfile(user) {
+      profileEl.hidden = false;
+      rankEl.textContent = 'Carregando...';
+      noteEl.textContent = 'Sincronizando seu perfil...';
+      const profile = getDiscordProfile(user);
+      nameEl.textContent = profile.display_name;
+      handleEl.textContent = profile.username.startsWith('@') ? profile.username : '@' + profile.username;
+      avatarEl.src = profile.avatar_url || 'https://cdn.discordapp.com/embed/avatars/0.png';
+      avatarEl.onerror = () => { avatarEl.src = 'https://cdn.discordapp.com/embed/avatars/0.png'; };
+
+      const { error: profileError } = await supabase.from("profiles").upsert({
+        id: user.id, username: profile.username, display_name: profile.display_name, avatar_url: profile.avatar_url || null
+      }, { onConflict: "id" });
+      if (profileError) noteEl.textContent = 'Não foi possível salvar o perfil: ' + profileError.message;
+      else noteEl.textContent = 'Perfil sincronizado com sua conta Discord.';
+
+      const { data: roleData, error: roleError } = await supabase.from("member_roles").select("role").eq("user_id", user.id).maybeSingle();
+      if (roleError) {
+        rankEl.textContent = 'Indisponível';
+        noteEl.textContent += ' Erro ao consultar patente: ' + roleError.message;
+      } else if (roleData && roleNames[roleData.role]) {
+        rankEl.textContent = roleNames[roleData.role];
       } else {
-        statusEl.textContent = 'Você ainda não está conectado.';
-        userEl.hidden = true;
-        loginButton.hidden = false;
-        logoutButton.hidden = true;
+        rankEl.textContent = 'Aguardando atribuição';
+        noteEl.textContent += ' Sua patente será definida pela liderança.';
       }
     }
 
-    // Registra o listener antes de consultar a sessão para não perder
-    // o evento de retorno do OAuth.
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        messageEl.textContent = '';
+    function showSession(session) {
+      if (session && session.user) {
+        statusEl.textContent = 'Você está conectado à WINX!';
+        userEl.textContent = session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email || 'Conta Discord conectada';
+        userEl.hidden = false; loginButton.hidden = true; logoutButton.hidden = false;
+        loadMemberProfile(session.user).catch(error => { noteEl.textContent = "Erro ao carregar perfil: " + (error.message || String(error)); });
+      } else {
+        statusEl.textContent = 'Você ainda não está conectado.';
+        userEl.hidden = true; profileEl.hidden = true; loginButton.hidden = false; logoutButton.hidden = true;
       }
+    }
+
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') messageEl.textContent = '';
       showSession(session);
     });
 
-    loginButton.addEventListener('click', async () => {
-      messageEl.textContent = 'Abrindo o Discord para autenticação...';
-      loginButton.disabled = true;
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'discord',
-        options: {
-          redirectTo: window.location.origin,
-          scopes: 'identify email'
-        }
-      });
-      if (error) {
-        messageEl.textContent = 'Erro ao iniciar login: ' + error.message;
-        loginButton.disabled = false;
-      }
+    loginButton.addEventListener("click", async () => {
+      messageEl.textContent = 'Abrindo o Discord para autenticação...'; loginButton.disabled = true;
+      const { error } = await supabase.auth.signInWithOAuth({ provider: "discord", options: { redirectTo: window.location.origin, scopes: "identify email" } });
+      if (error) { messageEl.textContent = "Erro ao iniciar login: " + error.message; loginButton.disabled = false; }
     });
 
-    logoutButton.addEventListener('click', async () => {
+    logoutButton.addEventListener("click", async () => {
       messageEl.textContent = 'Saindo da conta...';
       const { error } = await supabase.auth.signOut();
-      if (error) {
-        messageEl.textContent = 'Erro ao sair: ' + error.message;
-        return;
-      }
-      messageEl.textContent = 'Você saiu da sua conta.';
-      showSession(null);
+      if (error) { messageEl.textContent = "Erro ao sair: " + error.message; return; }
+      messageEl.textContent = 'Você saiu da sua conta.'; showSession(null);
     });
 
     async function loadSession() {
       statusEl.textContent = 'Verificando sua sessão...';
       const { data, error } = await supabase.auth.getSession();
-      if (error) {
-        statusEl.textContent = 'Não foi possível verificar a sessão.';
-        messageEl.textContent = 'Erro do Supabase: ' + error.message;
-        return;
-      }
+      if (error) { statusEl.textContent = "Não foi possível verificar a sessão."; messageEl.textContent = "Erro do Supabase: " + error.message; return; }
       showSession(data.session);
       if (!data.session) {
         const params = new URLSearchParams(window.location.search);
-        if (params.has('error') || params.has('error_description')) {
-          messageEl.textContent =
-            params.get('error_description') ||
-            params.get('error') ||
-            'O provedor não concluiu a autenticação.';
-        }
+        if (params.has("error") || params.has("error_description")) messageEl.textContent = params.get("error_description") || params.get("error");
       }
       loginButton.disabled = false;
     }
 
-    loadSession().catch((error) => {
-      statusEl.textContent = 'Falha ao carregar a sessão.';
-      messageEl.textContent = 'Erro inesperado: ' + (error?.message || String(error));
-      loginButton.disabled = false;
-    });
+    loadSession().catch(error => { statusEl.textContent = "Falha ao carregar a sessão."; messageEl.textContent = "Erro inesperado: " + (error.message || String(error)); loginButton.disabled = false; });
   </script>
 </body>
 </html>
