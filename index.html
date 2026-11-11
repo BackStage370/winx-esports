@@ -46,6 +46,23 @@
     .portal-view h3 { color:#d4b4ff; margin-top:0; }
     .member-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; border-bottom:1px solid #392653; }
     .member-row small,.empty-state { color:#bda9d2; }
+    .players-summary { display:flex; flex-wrap:wrap; gap:10px; margin:18px 0 24px; }
+    .players-total { padding:9px 13px; border:1px solid #67428e; border-radius:9px; background:#21172f; color:#e7d8f8; font-size:13px; }
+    .hierarchy-group { margin:24px 0 30px; }
+    .hierarchy-heading { display:flex; align-items:center; gap:10px; margin:0 0 14px; color:#d4b4ff; font-size:18px; }
+    .hierarchy-heading span { color:#a99bb8; font-size:12px; font-weight:400; }
+    .players-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(225px,1fr)); gap:14px; }
+    .player-card { display:flex; align-items:center; gap:13px; min-width:0; padding:15px; border:1px solid #392653; border-radius:12px; background:#100c19; }
+    .player-avatar { width:58px; height:58px; flex:0 0 58px; border-radius:50%; object-fit:cover; border:2px solid #8e62bd; background:#241833; }
+    .player-info { min-width:0; }
+    .player-name { margin:0 0 5px; color:#fff; font-size:15px; overflow-wrap:anywhere; }
+    .player-handle { margin:0 0 7px; color:#a99bb8; font-size:12px; overflow-wrap:anywhere; }
+    .player-rank { display:inline-block; padding:4px 8px; border-radius:20px; background:#2a1c3b; color:#d4b4ff; font-size:11px; font-weight:800; }
+    .player-card[data-role="administrator"] { border-color:#b88aff; }
+    .player-card[data-role="leader"] { border-color:#8062b2; }
+    .player-card[data-role="member"] { border-color:#4b4260; }
+    .player-card[data-role="recruit"] { border-color:#3c3548; }
+    .players-error { color:#ffcf8a; padding:12px; border:1px solid #76552f; border-radius:9px; background:#241a12; }
     footer { padding: 25px; text-align: center; color: #91869e; border-top: 1px solid #392653; }
     @media (max-width: 700px) {
       header { flex-direction: column; }
@@ -116,7 +133,7 @@
 
           <div class="portal-view" data-view="home"><h3>Bem-vindo ao portal WINX</h3><div class="cards"><div class="card"><h3>📢 Recados</h3><p class="empty-state">Os comunicados e avisos da equipe aparecerão aqui.</p></div><div class="card"><h3>🖼️ Imagens</h3><p class="empty-state">Galeria de artes, fotos e conquistas da WINX.</p></div></div></div>
           <div class="portal-view" data-view="profile" hidden><h3>Meu perfil</h3><p>Seu perfil completo, identificação Discord e patente aparecem no cartão acima.</p></div>
-          <div class="portal-view" data-view="players" hidden><h3>Jogadores</h3><p id="players-status" class="empty-state">Carregando...</p><div id="players-list"></div></div>
+          <div class="portal-view" data-view="players" hidden><h3>Jogadores WINX</h3><p class="empty-state">Quadro oficial de integrantes organizado pela hierarquia do clã.</p><div id="players-summary" class="players-summary"></div><p id="players-status" class="empty-state">Carregando integrantes...</p><div id="players-list"></div></div>
           <div class="portal-view" data-view="videos" hidden><h3>Vídeos</h3><p class="empty-state">Espaço reservado para clipes e melhores jogadas.</p></div>
           <div class="portal-view" data-view="admin" hidden><h3>Administração</h3><p>Área restrita. O gerenciamento de patentes será liberado após configurarmos as permissões seguras no banco.</p></div>
         </div>
@@ -148,8 +165,11 @@
     const adminTab = document.getElementById('admin-tab');
     const playersStatus = document.getElementById('players-status');
     const playersList = document.getElementById('players-list');
+    const playersSummary = document.getElementById('players-summary');
 
     const roleNames = { administrator: '👑 Administrador', leader: '⚔️ Líder', member: '🛡️ Membro', recruit: '🎯 Recruta' };
+    const roleOrder = ['administrator', 'leader', 'member', 'recruit'];
+    const roleFallbackAvatar = 'https://cdn.discordapp.com/embed/avatars/0.png';
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: { flowType: "pkce", detectSessionInUrl: true, persistSession: true, autoRefreshToken: true }
@@ -193,16 +213,88 @@
 
     async function loadPlayers() {
       playersStatus.textContent = 'Carregando integrantes...';
-      const result = await supabase.from('profiles').select('username, display_name').order('display_name');
-      if (result.error) { playersStatus.textContent = 'Não foi possível carregar: ' + result.error.message; return; }
+      playersStatus.className = 'empty-state';
       playersList.replaceChildren();
-      if (!result.data || result.data.length === 0) { playersStatus.textContent = 'Ainda não há jogadores cadastrados.'; return; }
-      playersStatus.textContent = result.data.length + ' jogador(es) cadastrado(s).';
-      result.data.forEach(player => {
-        const row = document.createElement('div'); row.className = 'member-row';
-        const name = document.createElement('strong'); name.textContent = player.display_name || player.username || 'Jogador WINX';
-        const handle = document.createElement('small'); handle.textContent = player.username ? '@' + player.username : 'Integrante';
-        row.append(name, handle); playersList.append(row);
+      playersSummary.replaceChildren();
+
+      const [profilesResult, rolesResult] = await Promise.all([
+        supabase.from('profiles').select('id, username, display_name, avatar_url').order('display_name'),
+        supabase.from('member_roles').select('user_id, role')
+      ]);
+
+      if (profilesResult.error) {
+        playersStatus.textContent = 'Não foi possível carregar os jogadores: ' + profilesResult.error.message;
+        playersStatus.className = 'players-error';
+        return;
+      }
+      if (rolesResult.error) {
+        playersStatus.textContent = 'Os perfis foram encontrados, mas a hierarquia está protegida pelas permissões do banco. É necessário liberar a leitura dos cargos para usuários autenticados.';
+        playersStatus.className = 'players-error';
+        return;
+      }
+
+      const profiles = profilesResult.data || [];
+      const rolesByUser = new Map((rolesResult.data || []).map(item => [item.user_id, item.role]));
+      const knownRole = role => roleOrder.includes(role) ? role : 'recruit';
+      const players = profiles.map(profile => ({ ...profile, role: knownRole(rolesByUser.get(profile.id) || 'recruit') }));
+      players.sort((a, b) => {
+        const order = roleOrder.indexOf(a.role) - roleOrder.indexOf(b.role);
+        return order || (a.display_name || a.username || '').localeCompare(b.display_name || b.username || '', 'pt-BR');
+      });
+
+      if (!players.length) {
+        playersStatus.textContent = 'Ainda não há jogadores cadastrados. Assim que os integrantes entrarem com Discord, aparecerão aqui.';
+        return;
+      }
+
+      playersStatus.textContent = players.length + ' integrante(s) no cadastro da WINX.';
+      roleOrder.forEach(role => {
+        const pill = document.createElement('span');
+        pill.className = 'players-total';
+        pill.textContent = roleNames[role] + ': ' + players.filter(player => player.role === role).length;
+        playersSummary.append(pill);
+      });
+
+      roleOrder.forEach(role => {
+        const groupPlayers = players.filter(player => player.role === role);
+        if (!groupPlayers.length) return;
+        const group = document.createElement('section');
+        group.className = 'hierarchy-group';
+        const heading = document.createElement('h4');
+        heading.className = 'hierarchy-heading';
+        heading.textContent = roleNames[role];
+        const count = document.createElement('span');
+        count.textContent = groupPlayers.length + (groupPlayers.length === 1 ? ' integrante' : ' integrantes');
+        heading.append(count);
+        const grid = document.createElement('div');
+        grid.className = 'players-grid';
+
+        groupPlayers.forEach(player => {
+          const card = document.createElement('article');
+          card.className = 'player-card';
+          card.dataset.role = role;
+          const avatar = document.createElement('img');
+          avatar.className = 'player-avatar';
+          avatar.alt = 'Foto de ' + (player.display_name || player.username || 'jogador');
+          avatar.src = player.avatar_url || roleFallbackAvatar;
+          avatar.onerror = () => { avatar.src = roleFallbackAvatar; };
+          const info = document.createElement('div');
+          info.className = 'player-info';
+          const name = document.createElement('h5');
+          name.className = 'player-name';
+          name.textContent = player.display_name || player.username || 'Jogador WINX';
+          const handle = document.createElement('p');
+          handle.className = 'player-handle';
+          handle.textContent = player.username ? '@' + player.username.replace(/^@/, '') : 'Discord conectado';
+          const rank = document.createElement('span');
+          rank.className = 'player-rank';
+          rank.textContent = roleNames[role];
+          info.append(name, handle, rank);
+          card.append(avatar, info);
+          grid.append(card);
+        });
+        group.append(heading, grid);
+        playersList.append(group);
       });
     }
 
