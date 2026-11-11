@@ -220,87 +220,99 @@
     }
 
     async function loadPlayersData() {
-      playersStatus.textContent = 'Carregando integrantes...';
+      playersStatus.textContent = 'Carregando jogadores do Discord...';
       playersStatus.className = 'empty-state';
       playersList.replaceChildren();
       playersSummary.replaceChildren();
 
-      const [profilesResult, rolesResult] = await Promise.all([
-        supabase.from('profiles').select('id, username, display_name, avatar_url').order('display_name'),
-        supabase.from('member_roles').select('user_id, role')
-      ]);
+      const { data, error } = await supabase
+        .from('discord_members')
+        .select('discord_id, username, display_name, avatar_url, roles, highest_role, highest_role_position')
+        .order('highest_role_position', { ascending: false })
+        .order('display_name', { ascending: true });
 
-      if (profilesResult.error) {
-        playersStatus.textContent = 'Não foi possível carregar os jogadores: ' + profilesResult.error.message;
-        playersStatus.className = 'players-error';
-        return;
-      }
-      if (rolesResult.error) {
-        playersStatus.textContent = 'Os perfis foram encontrados, mas a hierarquia está protegida pelas permissões do banco. É necessário liberar a leitura dos cargos para usuários autenticados.';
+      if (error) {
+        playersStatus.textContent = 'Não foi possível carregar os jogadores do Discord: ' + error.message;
         playersStatus.className = 'players-error';
         return;
       }
 
-      const profiles = profilesResult.data || [];
-      const rolesByUser = new Map((rolesResult.data || []).map(item => [item.user_id, item.role]));
-      const knownRole = role => roleOrder.includes(role) ? role : 'recruit';
-      const players = profiles.map(profile => ({ ...profile, role: knownRole(rolesByUser.get(profile.id) || 'recruit') }));
-      players.sort((a, b) => {
-        const order = roleOrder.indexOf(a.role) - roleOrder.indexOf(b.role);
-        return order || (a.display_name || a.username || '').localeCompare(b.display_name || b.username || '', 'pt-BR');
+      const players = data || [];
+      if (!players.length) {
+        playersStatus.textContent = 'Nenhum jogador sincronizado ainda. Confira se o WINX Manager está rodando no seu PC.';
+        return;
+      }
+
+      const roleGroups = new Map();
+      players.forEach(player => {
+        const roles = Array.isArray(player.roles) ? player.roles : [];
+        const mainRole = player.highest_role || 'Sem cargo';
+        const position = Number(player.highest_role_position || 0);
+        if (!roleGroups.has(mainRole)) roleGroups.set(mainRole, { position, players: [] });
+        roleGroups.get(mainRole).players.push({ ...player, roles });
       });
 
-      if (!players.length) {
-        playersStatus.textContent = 'Ainda não há jogadores cadastrados. Assim que os integrantes entrarem com Discord, aparecerão aqui.';
-        return;
-      }
+      const sortedGroups = [...roleGroups.entries()].sort((a, b) => b[1].position - a[1].position);
+      playersStatus.textContent = players.length + ' jogador(es) sincronizado(s) diretamente do Discord.';
 
-      playersStatus.textContent = players.length + ' integrante(s) no cadastro da WINX.';
-      roleOrder.forEach(role => {
+      sortedGroups.forEach(([roleName, groupData]) => {
         const pill = document.createElement('span');
         pill.className = 'players-total';
-        pill.textContent = roleNames[role] + ': ' + players.filter(player => player.role === role).length;
+        pill.textContent = roleName + ': ' + groupData.players.length;
         playersSummary.append(pill);
       });
 
-      roleOrder.forEach(role => {
-        const groupPlayers = players.filter(player => player.role === role);
-        if (!groupPlayers.length) return;
+      sortedGroups.forEach(([roleName, groupData]) => {
         const group = document.createElement('section');
         group.className = 'hierarchy-group';
         const heading = document.createElement('h4');
         heading.className = 'hierarchy-heading';
-        heading.textContent = roleNames[role];
+        heading.textContent = roleName;
         const count = document.createElement('span');
-        count.textContent = groupPlayers.length + (groupPlayers.length === 1 ? ' integrante' : ' integrantes');
+        count.textContent = groupData.players.length + (groupData.players.length === 1 ? ' jogador' : ' jogadores');
         heading.append(count);
+
         const grid = document.createElement('div');
         grid.className = 'players-grid';
 
-        groupPlayers.forEach(player => {
+        groupData.players.forEach(player => {
           const card = document.createElement('article');
           card.className = 'player-card';
-          card.dataset.role = role;
+          card.dataset.role = 'discord';
+
           const avatar = document.createElement('img');
           avatar.className = 'player-avatar';
           avatar.alt = 'Foto de ' + (player.display_name || player.username || 'jogador');
           avatar.src = player.avatar_url || roleFallbackAvatar;
           avatar.onerror = () => { avatar.src = roleFallbackAvatar; };
+
           const info = document.createElement('div');
           info.className = 'player-info';
+
           const name = document.createElement('h5');
           name.className = 'player-name';
           name.textContent = player.display_name || player.username || 'Jogador WINX';
+
           const handle = document.createElement('p');
           handle.className = 'player-handle';
-          handle.textContent = player.username ? '@' + player.username.replace(/^@/, '') : 'Discord conectado';
+          handle.textContent = '@' + (player.username || 'discord');
+
           const rank = document.createElement('span');
           rank.className = 'player-rank';
-          rank.textContent = roleNames[role];
-          info.append(name, handle, rank);
+          rank.textContent = player.highest_role || 'Sem cargo';
+
+          const secondary = document.createElement('p');
+          secondary.className = 'player-handle';
+          const otherRoles = player.roles
+            .map(role => role.name)
+            .filter(name => name && name !== player.highest_role);
+          secondary.textContent = otherRoles.length ? otherRoles.join(' · ') : 'Cargo principal';
+
+          info.append(name, handle, rank, secondary);
           card.append(avatar, info);
           grid.append(card);
         });
+
         group.append(heading, grid);
         playersList.append(group);
       });
