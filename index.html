@@ -25,7 +25,7 @@
     .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 20px; margin-top: 30px; }
     .card { background: #171222; border: 1px solid #392653; padding: 28px; border-radius: 12px; }
     .card h3 { color: #c59aff; }
-    .account-panel { max-width: 620px; margin: 25px auto 0; padding: 28px; background: #171222; border: 1px solid #67428e; border-radius: 14px; }
+    .account-panel { max-width: 1100px; margin: 25px auto 0; padding: 28px; background: #171222; border: 1px solid #67428e; border-radius: 14px; }
     .account-panel p { color: #c7bfd3; line-height: 1.6; }
     #account-status { color: #d4b4ff; font-weight: bold; }
     #account-message { min-height: 24px; color: #ffcf8a; font-size: 14px; }
@@ -42,7 +42,7 @@
     .portal-tabs { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; width:100%; margin:0; padding-top:10px; border-top:1px solid #392653; }
     .tab-button { border:1px solid #67428e; background:#171222; color:#e7d8f8; border-radius:9px; padding:9px 13px; cursor:pointer; font-weight:700; }
     .tab-button.active { background:#854bd0; border-color:#b88aff; color:white; }
-    .portal-view { max-width:850px; margin:18px auto; padding:22px; text-align:left; background:#171222; border:1px solid #392653; border-radius:14px; }
+    .portal-view { max-width:100%; min-height:420px; margin:18px auto; padding:28px; text-align:left; background:#171222; border:1px solid #392653; border-radius:14px; }
     .portal-view h3 { color:#d4b4ff; margin-top:0; }
     .member-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; border-bottom:1px solid #392653; }
     .member-row small,.empty-state { color:#bda9d2; }
@@ -63,7 +63,7 @@
       <a href="#recrutamento">Recrutamento</a>
       <a href="#area-membros">Área de membros</a>
     </nav>
-    <nav id="top-portal-tabs" class="portal-tabs" aria-label="Navegação dos membros" hidden><button class="tab-button active" data-tab="profile" type="button">Meu perfil</button><button class="tab-button" data-tab="players" type="button">Jogadores</button><button class="tab-button" data-tab="videos" type="button">Vídeos</button><button class="tab-button" data-tab="gallery" type="button">Imagens</button><button class="tab-button" data-tab="notices" type="button">Recados</button><button class="tab-button" data-tab="admin" id="admin-tab" type="button" hidden>Administração</button></nav>
+    <nav id="top-portal-tabs" class="portal-tabs" aria-label="Navegação do portal" hidden><button class="tab-button active" data-tab="home" type="button">Início</button><button class="tab-button" data-tab="profile" type="button">Meu perfil</button><button class="tab-button" data-tab="players" type="button">Jogadores</button><button class="tab-button" data-tab="videos" type="button">Vídeos</button><button class="tab-button" data-tab="admin" id="admin-tab" type="button" hidden>Administração</button></nav>
   </header>
 
   <main>
@@ -114,11 +114,10 @@
         <p id="account-message" role="status" aria-live="polite"></p>
         <div id="portal-area" hidden>
 
-          <div class="portal-view" data-view="profile"><h3>Meu perfil</h3><p>Seu perfil, avatar e patente estão acima.</p></div>
+          <div class="portal-view" data-view="home"><h3>Bem-vindo ao portal WINX</h3><div class="cards"><div class="card"><h3>📢 Recados</h3><p class="empty-state">Os comunicados e avisos da equipe aparecerão aqui.</p></div><div class="card"><h3>🖼️ Imagens</h3><p class="empty-state">Galeria de artes, fotos e conquistas da WINX.</p></div></div></div>
+          <div class="portal-view" data-view="profile" hidden><h3>Meu perfil</h3><p>Seu perfil completo, identificação Discord e patente aparecem no cartão acima.</p></div>
           <div class="portal-view" data-view="players" hidden><h3>Jogadores</h3><p id="players-status" class="empty-state">Carregando...</p><div id="players-list"></div></div>
           <div class="portal-view" data-view="videos" hidden><h3>Vídeos</h3><p class="empty-state">Espaço reservado para clipes e melhores jogadas.</p></div>
-          <div class="portal-view" data-view="gallery" hidden><h3>Imagens</h3><p class="empty-state">Espaço reservado para artes, fotos e conquistas.</p></div>
-          <div class="portal-view" data-view="notices" hidden><h3>Recados</h3><p class="empty-state">Espaço reservado para avisos, treinos e eventos.</p></div>
           <div class="portal-view" data-view="admin" hidden><h3>Administração</h3><p>Área restrita. O gerenciamento de patentes será liberado após configurarmos as permissões seguras no banco.</p></div>
         </div>
       </div>
@@ -210,7 +209,7 @@
     document.querySelectorAll('[data-tab]').forEach(button => button.addEventListener('click', () => {
       document.querySelectorAll('[data-tab]').forEach(item => item.classList.toggle('active', item === button));
       document.querySelectorAll('[data-view]').forEach(view => { view.hidden = view.dataset.view !== button.dataset.tab; });
-      document.getElementById('area-membros').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('portal-area').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }));
 
     function showSession(session) {
