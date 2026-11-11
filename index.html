@@ -10,7 +10,7 @@
     [hidden] { display: none !important; }
     html { scroll-behavior: smooth; }
     body { margin: 0; font-family: Arial, sans-serif; background: #090710; color: white; }
-    header { padding: 20px 8%; display: flex; justify-content: space-between; align-items: center; gap: 18px; border-bottom: 1px solid #392653; }
+    header { padding: 18px 5%; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px; border-bottom: 1px solid #392653; }
     .logo { color: #c59aff; font-size: 25px; font-weight: 900; letter-spacing: 3px; white-space: nowrap; }
     nav { display: flex; align-items: center; flex-wrap: wrap; gap: 18px; }
     nav a { color: white; text-decoration: none; }
@@ -39,8 +39,8 @@
     .rank-label { color: #bda9d2; font-size: 14px; }
     .rank-value { color: #d4b4ff; font-weight: 800; }
     .profile-note { font-size: 13px; color: #a99bb8 !important; margin-bottom: 0; }
-    .portal-tabs { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin:24px auto; }
-    .tab-button { border:1px solid #67428e; background:#171222; color:#e7d8f8; border-radius:9px; padding:11px 15px; cursor:pointer; font-weight:700; }
+    .portal-tabs { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; width:100%; margin:0; padding-top:10px; border-top:1px solid #392653; }
+    .tab-button { border:1px solid #67428e; background:#171222; color:#e7d8f8; border-radius:9px; padding:9px 13px; cursor:pointer; font-weight:700; }
     .tab-button.active { background:#854bd0; border-color:#b88aff; color:white; }
     .portal-view { max-width:850px; margin:18px auto; padding:22px; text-align:left; background:#171222; border:1px solid #392653; border-radius:14px; }
     .portal-view h3 { color:#d4b4ff; margin-top:0; }
@@ -63,6 +63,7 @@
       <a href="#recrutamento">Recrutamento</a>
       <a href="#area-membros">Área de membros</a>
     </nav>
+    <nav id="top-portal-tabs" class="portal-tabs" aria-label="Navegação dos membros" hidden><button class="tab-button active" data-tab="profile" type="button">Meu perfil</button><button class="tab-button" data-tab="players" type="button">Jogadores</button><button class="tab-button" data-tab="videos" type="button">Vídeos</button><button class="tab-button" data-tab="gallery" type="button">Imagens</button><button class="tab-button" data-tab="notices" type="button">Recados</button><button class="tab-button" data-tab="admin" id="admin-tab" type="button" hidden>Administração</button></nav>
   </header>
 
   <main>
@@ -112,7 +113,7 @@
         <button id="logout" class="button outline" type="button" hidden>Sair da conta</button>
         <p id="account-message" role="status" aria-live="polite"></p>
         <div id="portal-area" hidden>
-          <div class="portal-tabs"><button class="tab-button active" data-tab="profile" type="button">Meu perfil</button><button class="tab-button" data-tab="players" type="button">Jogadores</button><button class="tab-button" data-tab="videos" type="button">Vídeos</button><button class="tab-button" data-tab="gallery" type="button">Imagens</button><button class="tab-button" data-tab="notices" type="button">Recados</button><button class="tab-button" data-tab="admin" id="admin-tab" type="button" hidden>Administração</button></div>
+
           <div class="portal-view" data-view="profile"><h3>Meu perfil</h3><p>Seu perfil, avatar e patente estão acima.</p></div>
           <div class="portal-view" data-view="players" hidden><h3>Jogadores</h3><p id="players-status" class="empty-state">Carregando...</p><div id="players-list"></div></div>
           <div class="portal-view" data-view="videos" hidden><h3>Vídeos</h3><p class="empty-state">Espaço reservado para clipes e melhores jogadas.</p></div>
@@ -144,6 +145,7 @@
     const rankEl = document.getElementById('profile-rank');
     const noteEl = document.getElementById('profile-note');
     const portalArea = document.getElementById('portal-area');
+    const topPortalTabs = document.getElementById('top-portal-tabs');
     const adminTab = document.getElementById('admin-tab');
     const playersStatus = document.getElementById('players-status');
     const playersList = document.getElementById('players-list');
@@ -208,17 +210,18 @@
     document.querySelectorAll('[data-tab]').forEach(button => button.addEventListener('click', () => {
       document.querySelectorAll('[data-tab]').forEach(item => item.classList.toggle('active', item === button));
       document.querySelectorAll('[data-view]').forEach(view => { view.hidden = view.dataset.view !== button.dataset.tab; });
+      document.getElementById('area-membros').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }));
 
     function showSession(session) {
       if (session && session.user) {
         statusEl.textContent = 'Você está conectado à WINX!';
         userEl.textContent = session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email || 'Conta Discord conectada';
-        userEl.hidden = false; loginButton.hidden = true; logoutButton.hidden = false; portalArea.hidden = false;
+        userEl.hidden = false; loginButton.hidden = true; logoutButton.hidden = false; portalArea.hidden = false; topPortalTabs.hidden = false;
         loadMemberProfile(session.user).catch(error => { noteEl.textContent = "Erro ao carregar perfil: " + (error.message || String(error)); });
       } else {
         statusEl.textContent = 'Você ainda não está conectado.';
-        userEl.hidden = true; profileEl.hidden = true; portalArea.hidden = true; adminTab.hidden = true; loginButton.hidden = false; logoutButton.hidden = true;
+        userEl.hidden = true; profileEl.hidden = true; portalArea.hidden = true; topPortalTabs.hidden = true; adminTab.hidden = true; loginButton.hidden = false; logoutButton.hidden = true;
       }
     }
 
