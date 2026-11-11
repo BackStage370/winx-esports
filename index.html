@@ -211,7 +211,15 @@
       await loadPlayers();
     }
 
-    async function loadPlayers() {
+    let playersLoadPromise = null;
+
+    function loadPlayers() {
+      if (playersLoadPromise) return playersLoadPromise;
+      playersLoadPromise = loadPlayersData().finally(() => { playersLoadPromise = null; });
+      return playersLoadPromise;
+    }
+
+    async function loadPlayersData() {
       playersStatus.textContent = 'Carregando integrantes...';
       playersStatus.className = 'empty-state';
       playersList.replaceChildren();
