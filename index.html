@@ -27,6 +27,29 @@
     .hero { min-height: 75vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px 20px; background: radial-gradient(ellipse, rgba(91, 43, 132, .28) 0%, rgba(9, 7, 16, .08) 72%); }
     .hero h1 { font-family: 'Orbitron', 'Rajdhani', sans-serif; font-size: clamp(48px, 10vw, 90px); font-weight: 900; margin: 0; letter-spacing: 10px; color: #e1caff; text-shadow: 0 0 12px rgba(197, 154, 255, .8), 0 0 34px rgba(132, 75, 208, .55); }
     .hero p { color: #eee3ff; font-size: 21px; font-weight: 600; letter-spacing: 1.4px; text-shadow: 0 2px 12px rgba(0,0,0,.8); }
+    .home-gallery { padding:48px 7% 58px; text-align:center; background:linear-gradient(180deg,rgba(9,7,16,.18),rgba(12,7,22,.76)); }
+    .home-gallery-inner { max-width:1320px; margin:0 auto; }
+    .home-gallery h2 { margin:0 0 8px; color:#e2caff; font-family:'Orbitron','Rajdhani',sans-serif; font-size:clamp(23px,3vw,32px); letter-spacing:2px; text-shadow:0 2px 14px rgba(0,0,0,.8); }
+    .gallery-subtitle { margin:0 auto 25px; color:#e2d5ed; text-shadow:0 2px 8px #000; }
+    .home-gallery-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px; }
+    .home-gallery-card { position:relative; overflow:hidden; border:1px solid rgba(183,130,232,.52); border-radius:13px; background:rgba(15,10,23,.92); box-shadow:0 12px 28px rgba(0,0,0,.3); text-align:left; transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease; }
+    .home-gallery-card:hover { transform:translateY(-4px); border-color:#d0a5ff; box-shadow:0 16px 34px rgba(0,0,0,.4),0 0 20px rgba(164,104,218,.14); }
+    .home-gallery-card img { display:block; width:100%; aspect-ratio:16/10; object-fit:cover; background:#100c19; cursor:zoom-in; }
+    .gallery-caption { padding:12px 14px 14px; }
+    .gallery-caption strong { display:block; color:#f0e5ff; font-family:'Orbitron','Rajdhani',sans-serif; font-size:13px; }
+    .gallery-caption span { display:block; margin-top:5px; color:#bda9d2; font-size:13px; }
+    .gallery-empty { padding:22px; border:1px dashed rgba(190,145,235,.45); border-radius:12px; background:rgba(16,12,25,.66); color:#cbb8df; }
+    .gallery-lightbox { position:fixed; inset:0; z-index:20; display:none; align-items:center; justify-content:center; padding:24px; background:rgba(4,3,8,.92); cursor:zoom-out; }
+    .gallery-lightbox.open { display:flex; }
+    .gallery-lightbox img { max-width:min(1100px,94vw); max-height:88vh; object-fit:contain; border:1px solid rgba(190,145,235,.6); border-radius:10px; box-shadow:0 20px 60px #000; }
+    .gallery-admin { margin:18px 0 26px; padding:20px; border:1px solid rgba(173,119,224,.48); border-radius:12px; background:rgba(16,12,25,.72); }
+    .gallery-form { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; margin-top:14px; }
+    .gallery-form label { display:flex; flex-direction:column; gap:6px; color:#d4b4ff; font-weight:700; font-size:14px; text-align:left; }
+    .gallery-form input { width:100%; padding:11px 12px; border:1px solid #67428e; border-radius:8px; background:#100c19; color:white; font:inherit; }
+    .gallery-form button { align-self:end; min-height:43px; }
+    .gallery-admin-status { color:#bda9d2; font-size:13px; }
+    .gallery-remove { margin-top:9px; padding:6px 10px; border:1px solid #765052; border-radius:7px; background:#29171d; color:#ffd8df; cursor:pointer; }
+    @media(max-width:600px) { .home-gallery { padding:38px 6%; } .home-gallery-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; } .gallery-caption { padding:10px; } .gallery-caption strong { font-size:11px; } }
     .button { display: inline-block; margin: 8px; padding: 14px 25px; border: 0; border-radius: 8px; background: #854bd0; color: white; text-decoration: none; font-weight: bold; cursor: pointer; font-size: 15px; }
     .button:hover { background: #a36be9; }
     .outline { background: transparent; border: 1px solid #b88aff; }
@@ -149,6 +172,15 @@
       </div>
     </div>
 
+    <section class="home-gallery" id="galeria-winx">
+      <div class="home-gallery-inner">
+        <h2>GALERIA WINX</h2>
+        <p class="gallery-subtitle">Momentos, batalhas e conquistas da nossa equipe.</p>
+        <div id="home-gallery-grid" class="home-gallery-grid"><div class="gallery-empty">Nossa galeria está sendo preparada. Em breve, os momentos da WINX estarão aqui!</div></div>
+      </div>
+    </section>
+    <div id="gallery-lightbox" class="gallery-lightbox" aria-label="Visualização ampliada da imagem"><img id="gallery-lightbox-image" alt="Imagem ampliada da galeria WINX"></div>
+
     <section id="sobre">
       <h2>QUEM SOMOS</h2>
       <p>Somos WINX Esports. Uma comunidade unida pela paixão pelos games, trabalho em equipe e espírito competitivo.</p>
@@ -209,6 +241,17 @@
           <div class="portal-view" data-view="admin" hidden>
             <h3>⚙️ Administração</h3>
             <p class="empty-state">Gerencie os vídeos exibidos na galeria da WINX.</p>
+            <div class="gallery-admin">
+              <h4>🖼️ Adicionar imagem à página inicial</h4>
+              <p class="empty-state">Selecione uma imagem do computador. Ela será enviada ao armazenamento WINX e aparecerá na galeria pública.</p>
+              <form id="gallery-form" class="gallery-form">
+                <label>Título<input id="gallery-title" type="text" maxlength="80" placeholder="Ex.: Vitória da equipe" required></label>
+                <label>Descrição (opcional)<input id="gallery-description" type="text" maxlength="180" placeholder="Um momento especial da WINX"></label>
+                <label>Arquivo de imagem<input id="gallery-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required></label>
+                <button class="button" type="submit">＋ Publicar imagem</button>
+              </form>
+              <p id="gallery-admin-status" class="gallery-admin-status" role="status" aria-live="polite"></p>
+            </div>
             <div class="video-admin">
               <h4>Adicionar vídeo do YouTube</h4>
               <p class="empty-state">Cole o link de um vídeo público ou não listado. O vídeo será incorporado à galeria.</p>
@@ -255,10 +298,16 @@
     const videosGrid = document.getElementById('videos-grid');
     const videoForm = document.getElementById('video-form');
     const videoAdminStatus = document.getElementById('video-admin-status');
+    const galleryGrid = document.getElementById('home-gallery-grid');
+    const galleryForm = document.getElementById('gallery-form');
+    const galleryAdminStatus = document.getElementById('gallery-admin-status');
+    const galleryLightbox = document.getElementById('gallery-lightbox');
+    const galleryLightboxImage = document.getElementById('gallery-lightbox-image');
 
     const roleNames = { administrator: '👑 Administrador', leader: '⚔️ Líder', member: '🛡️ Membro', recruit: '🎯 Recruta' };
     const roleOrder = ['administrator', 'leader', 'member', 'recruit'];
     const roleFallbackAvatar = 'https://cdn.discordapp.com/embed/avatars/0.png';
+    let isAdmin = false;
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: { flowType: "pkce", detectSessionInUrl: true, persistSession: true, autoRefreshToken: true }
@@ -300,6 +349,7 @@
       adminTab.hidden = !isAdmin;
       await loadPlayers();
       await loadVideos();
+      await loadGallery();
     }
 
     let playersLoadPromise = null;
@@ -409,6 +459,54 @@
       });
     }
 
+    function renderGalleryItem(item) {
+      const card=document.createElement('article'); card.className='home-gallery-card';
+      const img=document.createElement('img'); img.src=item.public_url; img.alt=item.title||'Imagem da WINX'; img.loading='lazy';
+      img.addEventListener('click',()=>{galleryLightboxImage.src=item.public_url;galleryLightboxImage.alt=item.title||'Imagem ampliada da WINX';galleryLightbox.classList.add('open');});
+      const caption=document.createElement('div'); caption.className='gallery-caption';
+      const title=document.createElement('strong'); title.textContent=item.title||'Momento WINX'; caption.append(title);
+      if(item.description){const desc=document.createElement('span');desc.textContent=item.description;caption.append(desc);}
+      if(isAdmin){const remove=document.createElement('button');remove.className='gallery-remove';remove.type='button';remove.textContent='Remover imagem';remove.addEventListener('click',async()=>{
+        if(!confirm('Remover esta imagem da galeria WINX?'))return;
+        const {error:storageError}=await supabase.storage.from('winx-assets').remove([item.storage_path]);
+        if(storageError){galleryAdminStatus.textContent='Erro ao remover arquivo: '+storageError.message;return;}
+        const {error}=await supabase.from('winx_gallery').delete().eq('id',item.id);
+        if(error){galleryAdminStatus.textContent='Arquivo removido, mas não foi possível excluir o registro: '+error.message;return;}
+        galleryAdminStatus.textContent='Imagem removida da galeria.';await loadGallery();
+      });caption.append(remove);}
+      card.append(img,caption);galleryGrid.append(card);
+    }
+
+    async function loadGallery(){
+      galleryGrid.replaceChildren();
+      const {data,error}=await supabase.from('winx_gallery').select('id,title,description,storage_path,public_url,created_at').order('created_at',{ascending:false});
+      if(error){const empty=document.createElement('div');empty.className='gallery-empty';empty.textContent='A galeria será ativada assim que a tabela do Supabase for configurada.';galleryGrid.append(empty);return;}
+      if(!data||!data.length){const empty=document.createElement('div');empty.className='gallery-empty';empty.textContent='Ainda não há imagens publicadas. Em breve, os momentos da WINX estarão aqui!';galleryGrid.append(empty);return;}
+      data.forEach(renderGalleryItem);
+    }
+
+    galleryForm.addEventListener('submit',async event=>{
+      event.preventDefault();
+      if(!isAdmin){galleryAdminStatus.textContent='Somente administradores podem publicar imagens.';return;}
+      const file=document.getElementById('gallery-file').files[0];
+      const title=document.getElementById('gallery-title').value.trim();
+      const description=document.getElementById('gallery-description').value.trim();
+      if(!file){galleryAdminStatus.textContent='Selecione uma imagem.';return;}
+      if(!['image/jpeg','image/png','image/webp','image/gif'].includes(file.type)){galleryAdminStatus.textContent='Formato não aceito. Use JPG, PNG, WEBP ou GIF.';return;}
+      if(file.size>8*1024*1024){galleryAdminStatus.textContent='A imagem deve ter no máximo 8 MB.';return;}
+      const safeName=file.name.toLowerCase().replace(/[^a-z0-9._-]+/g,'-').replace(/^-+|-+$/g,'');
+      const storagePath='gallery/'+Date.now()+'-'+safeName;
+      galleryAdminStatus.textContent='Enviando imagem...';
+      const {error:uploadError}=await supabase.storage.from('winx-assets').upload(storagePath,file,{cacheControl:'3600',upsert:false,contentType:file.type});
+      if(uploadError){galleryAdminStatus.textContent='Falha no envio: '+uploadError.message;return;}
+      const {data:publicData}=supabase.storage.from('winx-assets').getPublicUrl(storagePath);
+      const {error}=await supabase.from('winx_gallery').insert({title,description:description||null,storage_path:storagePath,public_url:publicData.publicUrl});
+      if(error){await supabase.storage.from('winx-assets').remove([storagePath]);galleryAdminStatus.textContent='Imagem enviada, mas não foi possível salvar o registro: '+error.message;return;}
+      galleryForm.reset();galleryAdminStatus.textContent='Imagem publicada na página inicial da WINX!';await loadGallery();
+    });
+    galleryLightbox.addEventListener('click',()=>galleryLightbox.classList.remove('open'));
+    loadGallery();
+
     function getYouTubeId(value) {
       try {
         const url = new URL(value);
@@ -475,7 +573,6 @@
       });
     }
 
-    let isAdmin = false;
     videoForm.addEventListener('submit', async event => {
       event.preventDefault();
       if (!isAdmin) { videoAdminStatus.textContent = 'Somente administradores podem publicar vídeos.'; return; }
