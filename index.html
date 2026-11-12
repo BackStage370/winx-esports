@@ -77,17 +77,26 @@
     .hierarchy-group { margin:24px 0 30px; }
     .hierarchy-heading { display:flex; align-items:center; gap:10px; margin:0 0 14px; color:#d4b4ff; font-size:18px; }
     .hierarchy-heading span { color:#a99bb8; font-size:12px; font-weight:400; }
-    .players-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(225px,1fr)); gap:14px; }
-    .player-card { display:flex; align-items:center; gap:13px; min-width:0; padding:15px; border:1px solid #392653; border-radius:12px; background:#100c19; }
-    .player-avatar { width:58px; height:58px; flex:0 0 58px; border-radius:50%; object-fit:cover; border:2px solid #8e62bd; background:#241833; }
-    .player-info { min-width:0; }
-    .player-name { margin:0 0 5px; color:#fff; font-size:15px; overflow-wrap:anywhere; }
-    .player-handle { margin:0 0 7px; color:#a99bb8; font-size:12px; overflow-wrap:anywhere; }
-    .player-rank { display:inline-block; padding:4px 8px; border-radius:20px; background:#2a1c3b; color:#d4b4ff; font-size:11px; font-weight:800; }
-    .player-card[data-role="administrator"] { border-color:#b88aff; }
-    .player-card[data-role="leader"] { border-color:#8062b2; }
-    .player-card[data-role="member"] { border-color:#4b4260; }
-    .player-card[data-role="recruit"] { border-color:#3c3548; }
+    .hierarchy-group { margin:28px 0 34px; }
+    .hierarchy-heading { position:relative; display:flex; align-items:center; gap:10px; margin:0 0 16px; padding:0 0 11px; color:#e1caff; font-family:'Orbitron','Rajdhani',sans-serif; font-size:16px; letter-spacing:.4px; border-bottom:1px solid rgba(173,119,224,.22); }
+    .hierarchy-heading::before { content:""; width:4px; height:23px; border-radius:4px; background:linear-gradient(180deg,#d4b4ff,#873fc1); box-shadow:0 0 12px rgba(183,119,255,.45); }
+    .hierarchy-heading span { margin-left:2px; padding:4px 9px; border:1px solid rgba(173,119,224,.3); border-radius:20px; background:rgba(100,58,139,.18); color:#c9b5df; font-family:'Rajdhani',Arial,sans-serif; font-size:12px; font-weight:700; }
+    .players-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:16px; }
+    .player-card { position:relative; display:flex; align-items:center; gap:15px; min-width:0; min-height:126px; padding:17px; overflow:hidden; border:1px solid rgba(145,102,184,.48); border-radius:13px; background:linear-gradient(120deg,rgba(30,20,43,.98),rgba(13,10,21,.98) 72%); box-shadow:0 9px 24px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.035); text-align:left; transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease; }
+    .player-card::before { content:""; position:absolute; inset:0 auto 0 0; width:3px; background:linear-gradient(180deg,#c69aff,#713da6); opacity:.9; }
+    .player-card::after { content:""; position:absolute; width:130px; height:130px; right:-80px; top:-80px; border-radius:50%; background:rgba(153,91,211,.12); filter:blur(5px); pointer-events:none; }
+    .player-card:hover { transform:translateY(-4px); border-color:#bd91ed; box-shadow:0 15px 30px rgba(0,0,0,.34),0 0 18px rgba(153,91,211,.12); }
+    .player-avatar { width:66px; height:66px; flex:0 0 66px; border-radius:50%; object-fit:cover; border:2px solid #b88aff; padding:2px; background:linear-gradient(135deg,#a66bea,#e04e75); box-shadow:0 0 0 4px rgba(166,107,234,.10),0 0 18px rgba(166,107,234,.2); }
+    .player-info { min-width:0; flex:1; position:relative; z-index:1; }
+    .player-name { margin:0 0 4px; color:#fff; font-family:'Orbitron','Rajdhani',sans-serif; font-size:14px; font-weight:800; letter-spacing:.15px; overflow-wrap:anywhere; }
+    .player-handle { margin:0 0 9px; color:#ad9fbd; font-size:12px; overflow-wrap:anywhere; }
+    .player-rank { display:inline-flex; align-items:center; max-width:100%; padding:5px 9px; border:1px solid rgba(190,145,235,.28); border-radius:20px; background:linear-gradient(90deg,rgba(100,58,139,.42),rgba(54,34,72,.72)); color:#e2caff; font-size:11px; font-weight:800; line-height:1.2; }
+    .player-info .player-handle:last-child { margin:8px 0 0; color:#c6b6d6; font-size:11px; line-height:1.4; }
+    .player-card[data-role="administrator"] { border-color:#c69aff; }
+    .player-card[data-role="leader"] { border-color:#9870c7; }
+    .player-card[data-role="member"] { border-color:rgba(145,102,184,.48); }
+    .player-card[data-role="recruit"] { border-color:#5b4a6d; }
+    @media (max-width:600px) { .players-grid { grid-template-columns:1fr; } .player-card { min-height:112px; padding:14px; } .player-avatar { width:58px; height:58px; flex-basis:58px; } }
     .players-error { color:#ffcf8a; padding:12px; border:1px solid #76552f; border-radius:9px; background:#241a12; }
     .honors-intro { max-width:760px; color:#c7bfd3; line-height:1.6; }
     .honors-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:16px; margin-top:22px; }
