@@ -78,6 +78,19 @@
     .honor-card h4 { margin:8px 0; color:#e1caff; font-family:'Orbitron','Rajdhani',sans-serif; font-size:14px; letter-spacing:.6px; }
     .honor-card p { margin:0; color:#bda9d2; font-size:14px; line-height:1.5; }
     .honors-empty { margin-top:20px; padding:16px; border:1px dashed rgba(190,145,235,.45); border-radius:10px; color:#bda9d2; background:rgba(16,12,25,.55); text-align:center; }
+    .video-admin { margin:18px 0 26px; padding:20px; border:1px solid rgba(173,119,224,.48); border-radius:12px; background:rgba(16,12,25,.72); }
+    .video-form { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; margin-top:14px; }
+    .video-form label { display:flex; flex-direction:column; gap:6px; color:#d4b4ff; font-weight:700; font-size:14px; text-align:left; }
+    .video-form input,.video-form select { width:100%; padding:11px 12px; border:1px solid #67428e; border-radius:8px; background:#100c19; color:white; font:inherit; }
+    .video-form button { align-self:end; min-height:43px; }
+    .video-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px; margin-top:20px; }
+    .video-card { overflow:hidden; border:1px solid rgba(173,119,224,.42); border-radius:12px; background:rgba(16,12,25,.88); }
+    .video-frame { position:relative; width:100%; aspect-ratio:16/9; background:#08060d; }
+    .video-frame iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
+    .video-details { padding:14px; text-align:left; }
+    .video-details h4 { margin:0 0 7px; color:#e1caff; }
+    .video-category { color:#b98be9; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:1px; }
+    .video-delete { margin-top:10px; padding:7px 10px; border:1px solid #765052; border-radius:7px; background:#29171d; color:#ffd8df; cursor:pointer; }
     footer { padding: 25px; text-align: center; color: #91869e; border-top: 1px solid #392653; }
     @media (max-width: 700px) {
       header { flex-direction: column; }
@@ -160,8 +173,27 @@
             <div class="honors-empty">Nenhuma medalha ou premiação vinculada ainda. Quando os cargos de reconhecimento forem definidos no Discord, poderemos exibi-los aqui.</div>
           </div>
           <div class="portal-view" data-view="players" hidden><h3>Jogadores WINX</h3><p class="empty-state">Quadro oficial de integrantes organizado pela hierarquia do clã.</p><div id="players-summary" class="players-summary"></div><p id="players-status" class="empty-state">Carregando integrantes...</p><div id="players-list"></div></div>
-          <div class="portal-view" data-view="videos" hidden><h3>Vídeos</h3><p class="empty-state">Espaço reservado para clipes e melhores jogadas.</p></div>
-          <div class="portal-view" data-view="admin" hidden><h3>Administração</h3><p>Área restrita. O gerenciamento de patentes será liberado após configurarmos as permissões seguras no banco.</p></div>
+          <div class="portal-view" data-view="videos" hidden>
+            <h3>🎬 Vídeos da WINX</h3>
+            <p class="empty-state">Melhores jogadas, campeonatos e momentos da nossa equipe.</p>
+            <div id="videos-status" class="honors-empty">Carregando vídeos...</div>
+            <div id="videos-grid" class="video-grid"></div>
+          </div>
+          <div class="portal-view" data-view="admin" hidden>
+            <h3>⚙️ Administração</h3>
+            <p class="empty-state">Gerencie os vídeos exibidos na galeria da WINX.</p>
+            <div class="video-admin">
+              <h4>Adicionar vídeo do YouTube</h4>
+              <p class="empty-state">Cole o link de um vídeo público ou não listado. O vídeo será incorporado à galeria.</p>
+              <form id="video-form" class="video-form">
+                <label>Título do vídeo<input id="video-title" type="text" maxlength="100" placeholder="Ex.: Melhor jogada da noite" required></label>
+                <label>Categoria<select id="video-category" required><option value="Melhores jogadas">Melhores jogadas</option><option value="Campeonatos">Campeonatos</option><option value="Vitórias da WINX">Vitórias da WINX</option><option value="Vídeos dos integrantes">Vídeos dos integrantes</option></select></label>
+                <label>Link do YouTube<input id="video-url" type="url" placeholder="https://www.youtube.com/watch?v=..." required></label>
+                <button class="button" type="submit">＋ Adicionar à galeria</button>
+              </form>
+              <p id="video-admin-status" class="empty-state" role="status" aria-live="polite"></p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -192,6 +224,10 @@
     const playersStatus = document.getElementById('players-status');
     const playersList = document.getElementById('players-list');
     const playersSummary = document.getElementById('players-summary');
+    const videosStatus = document.getElementById('videos-status');
+    const videosGrid = document.getElementById('videos-grid');
+    const videoForm = document.getElementById('video-form');
+    const videoAdminStatus = document.getElementById('video-admin-status');
 
     const roleNames = { administrator: '👑 Administrador', leader: '⚔️ Líder', member: '🛡️ Membro', recruit: '🎯 Recruta' };
     const roleOrder = ['administrator', 'leader', 'member', 'recruit'];
@@ -233,8 +269,10 @@
         noteEl.textContent += ' A liderança definirá sua patente.';
       }
       portalArea.hidden = false;
-      adminTab.hidden = !(roleData && roleData.role === 'administrator');
+      isAdmin = !!(roleData && roleData.role === 'administrator');
+      adminTab.hidden = !isAdmin;
       await loadPlayers();
+      await loadVideos();
     }
 
     let playersLoadPromise = null;
@@ -343,6 +381,89 @@
         playersList.append(group);
       });
     }
+
+    function getYouTubeId(value) {
+      try {
+        const url = new URL(value);
+        let id = '';
+        if (url.hostname === 'youtu.be' || url.hostname === 'www.youtu.be') id = url.pathname.split('/').filter(Boolean)[0] || '';
+        else if (['youtube.com','www.youtube.com','m.youtube.com','youtube-nocookie.com','www.youtube-nocookie.com'].includes(url.hostname)) {
+          if (url.pathname === '/watch') id = url.searchParams.get('v') || '';
+          else if (url.pathname.startsWith('/embed/') || url.pathname.startsWith('/shorts/')) id = url.pathname.split('/')[2] || '';
+        }
+        return /^[A-Za-z0-9_-]{11}$/.test(id) ? id : null;
+      } catch { return null; }
+    }
+
+    async function loadVideos() {
+      videosStatus.textContent = 'Carregando vídeos da WINX...';
+      videosGrid.replaceChildren();
+      const { data, error } = await supabase.from('winx_videos').select('id,title,category,youtube_id,created_at').order('created_at', { ascending: false });
+      if (error) {
+        videosStatus.textContent = 'A galeria ainda precisa ser configurada no Supabase. Assim que criarmos a tabela de vídeos, ela ficará disponível.';
+        return;
+      }
+      if (!data || !data.length) {
+        videosStatus.textContent = 'Ainda não há vídeos publicados. A liderança poderá adicionar os primeiros pela Administração.';
+        return;
+      }
+      videosStatus.textContent = data.length + ' vídeo(s) na galeria da WINX.';
+      data.forEach(video => {
+        const card = document.createElement('article');
+        card.className = 'video-card';
+        const frame = document.createElement('div');
+        frame.className = 'video-frame';
+        const iframe = document.createElement('iframe');
+        iframe.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(video.youtube_id);
+        iframe.title = video.title || 'Vídeo da WINX';
+        iframe.loading = 'lazy';
+        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+        iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+        iframe.allowFullscreen = true;
+        frame.append(iframe);
+        const details = document.createElement('div');
+        details.className = 'video-details';
+        const category = document.createElement('span');
+        category.className = 'video-category';
+        category.textContent = video.category || 'Vídeo WINX';
+        const title = document.createElement('h4');
+        title.textContent = video.title;
+        details.append(category, title);
+        card.append(frame, details);
+        if (isAdmin) {
+          const remove = document.createElement('button');
+          remove.className = 'video-delete';
+          remove.type = 'button';
+          remove.textContent = 'Remover vídeo';
+          remove.addEventListener('click', async () => {
+            if (!confirm('Remover este vídeo da galeria WINX?')) return;
+            const { error: deleteError } = await supabase.from('winx_videos').delete().eq('id', video.id);
+            if (deleteError) { videoAdminStatus.textContent = 'Erro ao remover: ' + deleteError.message; return; }
+            videoAdminStatus.textContent = 'Vídeo removido da galeria.';
+            await loadVideos();
+          });
+          details.append(remove);
+        }
+        videosGrid.append(card);
+      });
+    }
+
+    let isAdmin = false;
+    videoForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      if (!isAdmin) { videoAdminStatus.textContent = 'Somente administradores podem publicar vídeos.'; return; }
+      const title = document.getElementById('video-title').value.trim();
+      const category = document.getElementById('video-category').value;
+      const url = document.getElementById('video-url').value.trim();
+      const youtubeId = getYouTubeId(url);
+      if (!youtubeId) { videoAdminStatus.textContent = 'Link inválido. Use um link normal do YouTube, Shorts ou youtu.be.'; return; }
+      videoAdminStatus.textContent = 'Publicando vídeo...';
+      const { error } = await supabase.from('winx_videos').insert({ title, category, youtube_id: youtubeId, youtube_url: url });
+      if (error) { videoAdminStatus.textContent = 'Não foi possível publicar: ' + error.message; return; }
+      videoForm.reset();
+      videoAdminStatus.textContent = 'Vídeo adicionado à galeria!';
+      await loadVideos();
+    });
 
     document.querySelectorAll('[data-tab]').forEach(button => button.addEventListener('click', () => {
       document.querySelectorAll('[data-tab]').forEach(item => item.classList.toggle('active', item === button));
