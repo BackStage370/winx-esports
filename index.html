@@ -11,11 +11,19 @@
     [hidden] { display: none !important; }
     html { scroll-behavior: smooth; }
     body { margin: 0; font-family: 'Rajdhani', Arial, sans-serif; font-size: 17px; background: linear-gradient(rgba(12, 7, 22, .55), rgba(12, 7, 22, .66)), url('https://tyvrzpmfahlizellgpwk.supabase.co/storage/v1/object/public/winx-assets/winx-background.webp') center center / cover fixed no-repeat, #090710; color: white; }
-    header { padding: 18px 5%; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px; border-bottom: 1px solid #392653; background: rgba(9, 7, 16, .72); backdrop-filter: blur(10px); }
-    .logo { color: #d9b8ff; font-family: 'Orbitron', 'Rajdhani', sans-serif; font-size: 23px; font-weight: 900; letter-spacing: 3px; white-space: nowrap; text-shadow: 0 0 18px rgba(183, 119, 255, .45); }
-    nav { display: flex; align-items: center; flex-wrap: wrap; gap: 18px; }
-    nav a { color: white; text-decoration: none; }
-    nav a:hover { color: #c59aff; }
+    header { position:relative; z-index:5; padding:16px 5% 13px; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:13px 20px; border-bottom:1px solid rgba(171,119,224,.38); background:linear-gradient(105deg,rgba(10,7,15,.97),rgba(24,10,20,.94) 52%,rgba(12,8,19,.97)); backdrop-filter:blur(16px); box-shadow:0 12px 34px rgba(0,0,0,.36); }
+    header::before { content:""; position:absolute; top:0; left:5%; right:5%; height:1px; background:linear-gradient(90deg,transparent,rgba(190,130,255,.7),rgba(255,65,95,.5),transparent); }
+    .logo { color:#e4caff; font-family:'Orbitron','Rajdhani',sans-serif; font-size:24px; font-weight:900; letter-spacing:3px; white-space:nowrap; text-shadow:0 0 12px rgba(183,119,255,.45),0 0 26px rgba(207,52,93,.2); }
+    nav { display:flex; align-items:center; flex-wrap:wrap; gap:18px; }
+    header nav:not(.portal-tabs) a { position:relative; padding:8px 0; color:#e9e0ef; text-decoration:none; font-size:16px; font-weight:600; transition:color .2s ease; }
+    header nav:not(.portal-tabs) a::after { content:""; position:absolute; left:0; right:100%; bottom:2px; height:2px; background:linear-gradient(90deg,#a66bea,#e04e75); transition:right .2s ease; }
+    header nav:not(.portal-tabs) a:hover { color:#e0bdff; }
+    header nav:not(.portal-tabs) a:hover::after { right:0; }
+    #top-portal-tabs { justify-content:center; gap:9px; width:100%; margin:1px 0 0; padding:12px 0 0; border-top:1px solid rgba(173,119,224,.18); }
+    .tab-button { position:relative; border:1px solid rgba(161,112,204,.48); background:linear-gradient(180deg,rgba(39,27,51,.92),rgba(20,14,29,.96)); color:#e8dcf5; border-radius:8px; padding:10px 16px; cursor:pointer; font-family:'Rajdhani',Arial,sans-serif; font-size:15px; font-weight:700; letter-spacing:.25px; transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease; }
+    .tab-button:hover { transform:translateY(-2px); border-color:#c49aef; box-shadow:0 5px 16px rgba(126,72,177,.2); }
+    .tab-button.active { color:#fff; border-color:#c69aff; background:linear-gradient(110deg,#7040a8,#9854d5 58%,#9e3d70); box-shadow:0 0 18px rgba(153,91,211,.28),inset 0 1px rgba(255,255,255,.18); }
+    @media (max-width:700px) { header { padding:15px 5%; } header nav:not(.portal-tabs) { justify-content:center; gap:13px; } #top-portal-tabs { gap:7px; } .tab-button { padding:9px 11px; font-size:14px; } .logo { font-size:21px; } }
     .hero { min-height: 75vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px 20px; background: radial-gradient(ellipse, rgba(91, 43, 132, .28) 0%, rgba(9, 7, 16, .08) 72%); }
     .hero h1 { font-family: 'Orbitron', 'Rajdhani', sans-serif; font-size: clamp(48px, 10vw, 90px); font-weight: 900; margin: 0; letter-spacing: 10px; color: #e1caff; text-shadow: 0 0 12px rgba(197, 154, 255, .8), 0 0 34px rgba(132, 75, 208, .55); }
     .hero p { color: #eee3ff; font-size: 21px; font-weight: 600; letter-spacing: 1.4px; text-shadow: 0 2px 12px rgba(0,0,0,.8); }
