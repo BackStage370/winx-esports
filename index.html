@@ -26,13 +26,23 @@
     .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 20px; margin-top: 30px; }
     .card { background: rgba(23, 18, 34, .70); border: 1px solid rgba(173, 119, 224, .48); padding: 28px; border-radius: 12px; backdrop-filter: blur(8px); box-shadow: 0 10px 30px rgba(0,0,0,.18); }
     .card h3 { color: #c59aff; }
-    .organization-intro { color:#e4d8f1; max-width:760px; margin:0 auto; }
-    .organization-card { text-align:left; background:rgba(23,18,34,.66); }
-    .organization-kicker { display:block; color:#b98be9; font-family:'Orbitron','Rajdhani',sans-serif; font-size:10px; font-weight:700; letter-spacing:1.5px; margin-bottom:12px; }
-    .organization-card h3 { font-family:'Orbitron','Rajdhani',sans-serif; letter-spacing:.5px; }
-    .role-chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; }
-    .role-chips span { display:inline-flex; align-items:center; padding:7px 10px; border:1px solid rgba(190,145,235,.48); border-radius:999px; background:rgba(100,58,139,.25); color:#f0e4ff; font-size:13px; font-weight:700; }
-    .organization-note { color:#bda9d2; font-size:13px; margin:22px auto 0; max-width:800px; }
+    #equipe { position:relative; isolation:isolate; }
+    #equipe::before { content:""; position:absolute; inset:28px 4% 18px; z-index:-1; border:1px solid rgba(173,119,224,.18); border-radius:22px; background:linear-gradient(180deg,rgba(9,7,16,.28),rgba(9,7,16,.12)); box-shadow:0 20px 60px rgba(0,0,0,.16); }
+    #equipe > h2 { margin:0 0 12px; font-size:clamp(24px,3vw,34px); letter-spacing:2px; }
+    .organization-intro { color:#eee3ff; max-width:760px; margin:0 auto; font-size:18px; text-shadow:0 2px 8px rgba(0,0,0,.9); }
+    .organization-cards { max-width:1420px; margin:34px auto 0; grid-template-columns:repeat(4,minmax(0,1fr)); gap:18px; align-items:stretch; }
+    .organization-card { position:relative; overflow:hidden; min-height:250px; display:flex; flex-direction:column; text-align:left; padding:25px 23px; background:linear-gradient(145deg,rgba(25,17,37,.96),rgba(12,9,19,.94)); border:1px solid rgba(173,119,224,.58); box-shadow:0 14px 34px rgba(0,0,0,.3),inset 0 1px rgba(255,255,255,.035); transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease; }
+    .organization-card::before { content:""; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#7040a8,#d5b2ff,#7040a8); opacity:.9; }
+    .organization-card::after { content:""; position:absolute; width:150px; height:150px; right:-85px; top:-85px; border-radius:50%; background:rgba(151,91,211,.13); filter:blur(4px); pointer-events:none; }
+    .organization-card:hover { transform:translateY(-6px); border-color:#c69aff; box-shadow:0 20px 42px rgba(0,0,0,.38),0 0 22px rgba(151,91,211,.12); }
+    .organization-kicker { display:block; color:#c49aef; font-family:'Orbitron','Rajdhani',sans-serif; font-size:10px; font-weight:800; letter-spacing:1.6px; margin-bottom:17px; }
+    .organization-card h3 { margin:0 0 12px; color:#dfc3ff; font-family:'Orbitron','Rajdhani',sans-serif; font-size:20px; letter-spacing:.4px; }
+    .organization-card p { min-height:48px; margin:0; color:#e4dceD; line-height:1.45; }
+    .role-chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:auto; padding-top:20px; }
+    .role-chips span { display:inline-flex; align-items:center; padding:7px 10px; border:1px solid rgba(190,145,235,.55); border-radius:999px; background:rgba(100,58,139,.3); color:#f4eaff; font-size:12px; font-weight:700; }
+    .organization-note { color:#cbb8df; font-size:13px; margin:25px auto 0; max-width:800px; text-shadow:0 2px 7px rgba(0,0,0,.9); }
+    @media (max-width:1050px) { .organization-cards { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media (max-width:600px) { .organization-cards { grid-template-columns:1fr; } .organization-card { min-height:0; } .organization-card p { min-height:0; } #equipe::before { inset:15px 2% 10px; } }
     .account-panel { max-width: 1100px; margin: 25px auto 0; padding: 28px; background: rgba(23, 18, 34, .68); border: 1px solid rgba(167, 112, 220, .65); border-radius: 14px; backdrop-filter: blur(10px); box-shadow: 0 16px 42px rgba(0,0,0,.25); }
     .account-panel p { color: #c7bfd3; line-height: 1.6; }
     #account-status { color: #d4b4ff; font-weight: bold; }
@@ -136,7 +146,7 @@
         <article class="card organization-card"><span class="organization-kicker">03 · LINHA DE FRENTE</span><h3>🛡️ Combatentes</h3><p>Jogadores e funções que formam a força ativa da WINX.</p><div class="role-chips"><span>Membro</span><span>Sniper</span><span>Assalto</span><span>Suporte</span></div></article>
         <article class="card organization-card"><span class="organization-kicker">04 · INGRESSO</span><h3>🎯 Recrutamento</h3><p>Entrada, avaliação e integração de novos integrantes.</p><div class="role-chips"><span>Recruta · confirmar cargo no Discord</span></div></article>
       </div>
-      <p class="organization-note">Primeira proposta visual. Podemos ajustar a distribuição para refletir exatamente a hierarquia e as funções oficiais do Discord.</p>
+      <p class="organization-note">Uma hierarquia, quatro frentes. Cada integrante tem seu papel na força da WINX.</p>
     </section>
 
     <section id="recrutamento">
