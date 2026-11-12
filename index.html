@@ -71,6 +71,13 @@
     .player-card[data-role="member"] { border-color:#4b4260; }
     .player-card[data-role="recruit"] { border-color:#3c3548; }
     .players-error { color:#ffcf8a; padding:12px; border:1px solid #76552f; border-radius:9px; background:#241a12; }
+    .honors-intro { max-width:760px; color:#c7bfd3; line-height:1.6; }
+    .honors-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:16px; margin-top:22px; }
+    .honor-card { min-height:190px; padding:22px; border:1px solid rgba(173,119,224,.48); border-radius:13px; background:linear-gradient(145deg,rgba(49,31,69,.82),rgba(16,12,25,.88)); text-align:center; }
+    .honor-icon { width:58px; height:58px; display:grid; place-items:center; margin:0 auto 13px; border:1px solid rgba(190,145,235,.55); border-radius:50%; background:rgba(132,75,208,.18); font-size:28px; }
+    .honor-card h4 { margin:8px 0; color:#e1caff; font-family:'Orbitron','Rajdhani',sans-serif; font-size:14px; letter-spacing:.6px; }
+    .honor-card p { margin:0; color:#bda9d2; font-size:14px; line-height:1.5; }
+    .honors-empty { margin-top:20px; padding:16px; border:1px dashed rgba(190,145,235,.45); border-radius:10px; color:#bda9d2; background:rgba(16,12,25,.55); text-align:center; }
     footer { padding: 25px; text-align: center; color: #91869e; border-top: 1px solid #392653; }
     @media (max-width: 700px) {
       header { flex-direction: column; }
@@ -142,7 +149,16 @@
         <div id="portal-area" hidden>
 
           <div class="portal-view" data-view="home"><h3>Bem-vindo ao portal WINX</h3><div class="cards"><div class="card"><h3>📢 Recados</h3><p class="empty-state">Os comunicados e avisos da equipe aparecerão aqui.</p></div><div class="card"><h3>🖼️ Imagens</h3><p class="empty-state">Galeria de artes, fotos e conquistas da WINX.</p></div></div></div>
-          <div class="portal-view" data-view="profile" hidden><h3>Meu perfil</h3><p>Seu perfil completo, identificação Discord e patente aparecem no cartão acima.</p></div>
+          <div class="portal-view" data-view="profile" hidden>
+            <h3>🏅 Medalhas e premiações</h3>
+            <p class="honors-intro">Este espaço reúne as condecorações, títulos e reconhecimentos recebidos pelos integrantes da WINX no Discord. As premiações serão vinculadas aos cargos de reconhecimento definidos pela liderança.</p>
+            <div class="honors-grid">
+              <article class="honor-card"><div class="honor-icon">🏅</div><h4>Medalhas</h4><p>Condecorações por mérito, dedicação e contribuição ao clã.</p></article>
+              <article class="honor-card"><div class="honor-icon">🏆</div><h4>Premiações</h4><p>Títulos conquistados em campeonatos, torneios e eventos da WINX.</p></article>
+              <article class="honor-card"><div class="honor-icon">⭐</div><h4>Destaques</h4><p>Reconhecimentos especiais concedidos pela liderança.</p></article>
+            </div>
+            <div class="honors-empty">Nenhuma medalha ou premiação vinculada ainda. Quando os cargos de reconhecimento forem definidos no Discord, poderemos exibi-los aqui.</div>
+          </div>
           <div class="portal-view" data-view="players" hidden><h3>Jogadores WINX</h3><p class="empty-state">Quadro oficial de integrantes organizado pela hierarquia do clã.</p><div id="players-summary" class="players-summary"></div><p id="players-status" class="empty-state">Carregando integrantes...</p><div id="players-list"></div></div>
           <div class="portal-view" data-view="videos" hidden><h3>Vídeos</h3><p class="empty-state">Espaço reservado para clipes e melhores jogadas.</p></div>
           <div class="portal-view" data-view="admin" hidden><h3>Administração</h3><p>Área restrita. O gerenciamento de patentes será liberado após configurarmos as permissões seguras no banco.</p></div>
